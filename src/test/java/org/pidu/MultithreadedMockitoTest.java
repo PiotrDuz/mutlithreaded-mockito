@@ -14,7 +14,21 @@ public class MultithreadedMockitoTest {
     private ValueReturner object = Mockito.spy(new ValueReturner());
 
     @Test
-    public void runTest() throws InterruptedException {
+    public void testNotSafe() throws InterruptedException {
+        runInAnotherThread(() -> {  // run in background thread, continously use the mocked method
+            while (true) {
+                System.out.println(object.getValue());
+            }
+        });
+        Instant start = Instant.now();
+        while (Duration.between(start, Instant.now()).toSeconds() < RUN_FOR_SECONDS) {
+            Mockito.doAnswer(ans -> 13).when(object).getValue();  // try to mock the method, finally clash will occur with background thread
+        }
+    }
+
+
+    @Test
+    public void testSafe() throws InterruptedException {
         runInAnotherThread(() -> {  // run in background thread, continously use the mocked method
             while (true) {
                 System.out.println(object.getValue());
